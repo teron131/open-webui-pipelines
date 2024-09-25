@@ -6,6 +6,7 @@ __pycache__
 
 pipelines/*
 !pipelines/.gitignore
+!pipelines/*.py
 .DS_Store
 
 .venv
