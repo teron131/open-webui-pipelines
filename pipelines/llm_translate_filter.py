@@ -21,8 +21,8 @@ class Pipeline:
         SOURCE_LANGUAGE: Optional[str] = os.getenv("SOURCE_LANGUAGE", "en")
         TARGET_LANGUAGE: Optional[str] = os.getenv("TARGET_LANGUAGE", "zh-TW")
 
-        # New parameter to control display of both languages
-        TRANSLATE_FILTER: bool = os.getenv("TRANSLATE_FILTER", "false").lower() == "true"
+        # Control display of both languages
+        ENABLE_TRANSLATE_FILTER: bool = os.getenv("ENABLE_TRANSLATE_FILTER", "false").lower() == "true"
         DISPLAY_BOTH_LANGUAGES: bool = os.getenv("DISPLAY_BOTH_LANGUAGES", "true").lower() == "true"
 
     def __init__(self):
@@ -32,7 +32,7 @@ class Pipeline:
 
         # Initialize
         self.valves = self.Valves()
-        if not self.valves.TRANSLATE_FILTER:
+        if not self.valves.ENABLE_TRANSLATE_FILTER:
             self.valves.pipelines = []
 
         pass
