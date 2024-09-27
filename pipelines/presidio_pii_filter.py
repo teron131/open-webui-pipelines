@@ -19,12 +19,11 @@ from pydantic import BaseModel
 
 class Pipeline:
     class Valves(BaseModel):
+        ENABLE_PII_FILTER: bool = os.getenv("ENABLE_PII_FILTER", "false").lower() == "true"
         pipelines: List[str] = os.getenv("PII_FILTER_PIPELINES", "*").split(";")
         priority: int = 0
         entities_to_redact: List[str] = ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "US_SSN", "CREDIT_CARD", "IP_ADDRESS", "US_PASSPORT", "LOCATION", "DATE_TIME", "NRP", "MEDICAL_LICENSE", "URL"]
         language: str = "en"
-
-        ENABLE_PII_FILTER: bool = os.getenv("ENABLE_PII_FILTER", "false").lower() == "true"
 
     def __init__(self):
         self.type = "filter"

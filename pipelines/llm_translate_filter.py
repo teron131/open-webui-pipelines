@@ -9,6 +9,9 @@ from utils.pipelines.main import get_last_assistant_message
 
 class Pipeline:
     class Valves(BaseModel):
+        # Control display of both languages
+        ENABLE_TRANSLATE_FILTER: bool = os.getenv("ENABLE_TRANSLATE_FILTER", "false").lower() == "true"
+        DISPLAY_BOTH_LANGUAGES: bool = os.getenv("DISPLAY_BOTH_LANGUAGES", "true").lower() == "true"
         pipelines: List[str] = os.getenv("TRANSLATE_FILTER_PIPELINES", "*").split(";")
         priority: int = 0
 
@@ -20,10 +23,6 @@ class Pipeline:
         # Assistant message will be translated from SOURCE_LANGUAGE to TARGET_LANGUAGE
         SOURCE_LANGUAGE: Optional[str] = os.getenv("SOURCE_LANGUAGE", "en")
         TARGET_LANGUAGE: Optional[str] = os.getenv("TARGET_LANGUAGE", "zh-TW")
-
-        # Control display of both languages
-        ENABLE_TRANSLATE_FILTER: bool = os.getenv("ENABLE_TRANSLATE_FILTER", "false").lower() == "true"
-        DISPLAY_BOTH_LANGUAGES: bool = os.getenv("DISPLAY_BOTH_LANGUAGES", "true").lower() == "true"
 
     def __init__(self):
         self.type = "filter"
@@ -137,6 +136,6 @@ def combine_messages(original: str, translated: str) -> str:
     combined = [format_part(orig, trans) for orig, trans in zip(original_parts, translated_parts)]
     result = "\n".join(combined)
 
-    # Add an extra newline after lists end
+    # Add an extra newline after lists end for display
     result = re.sub(r"(\n   [^\n]+)(\n\d\.|\n-|\n[^\n])", r"\1\n\2", result)
     return result
