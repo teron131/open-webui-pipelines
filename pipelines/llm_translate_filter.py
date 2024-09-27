@@ -1,4 +1,5 @@
 import os
+import re
 from typing import List, Optional
 
 import requests
@@ -128,10 +129,35 @@ class Pipeline:
         for message in reversed(messages):
             if message["role"] == "assistant":
                 if self.valves.DISPLAY_BOTH_LANGUAGES:
-                    message["content"] = f"{assistant_message}\n\n{translated_assistant_message}"
+                    message["content"] = combine_messages(assistant_message, translated_assistant_message)
                 else:
                     message["content"] = translated_assistant_message
                 break
 
         body["messages"] = messages
         return body
+
+
+def combine_messages(original: str, translated: str) -> str:
+    def split_message(message: str) -> list:
+        parts = re.split(r"\n|(?<=```)", message)
+        return [part.strip() for part in parts if part.strip() or part == "```"]
+
+    def format_part(orig: str, trans: str) -> str:
+        if orig.startswith("```"):
+            return orig
+        elif orig[0].isdigit() and orig[1] == "." or orig[0] == "-":
+            return f"{orig}\n   {trans.strip()}"
+        else:
+            return f"{orig}\n{trans}"
+
+    original_parts = split_message(original)
+    translated_parts = [p.lstrip("- ").lstrip("0123456789.") for p in split_message(translated)]
+
+    combined = [format_part(orig, trans) for orig, trans in zip(original_parts, translated_parts)]
+    result = "\n".join(combined)
+
+    # Add an extra newline after lists end
+    result = re.sub(r"(\n   [^\n]+)(\n\d\.|\n-|\n[^\n])", r"\1\n\2", result)
+
+    return result
