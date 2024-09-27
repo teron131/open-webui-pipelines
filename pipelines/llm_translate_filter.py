@@ -27,7 +27,7 @@ class Pipeline:
 
     def __init__(self):
         self.type = "filter"
-        # self.id = "libretranslate_filter_pipeline"
+        # self.id = "llm_translate_filter"
         self.name = "LLM Translate Filter"
 
         # Initialize
@@ -67,7 +67,6 @@ class Pipeline:
             ],
             "model": self.valves.TRANSLATE_MODEL,
         }
-        print(payload)
 
         try:
             r = requests.post(
@@ -79,8 +78,8 @@ class Pipeline:
 
             r.raise_for_status()
             response = r.json()
-            print(response)
             return response["choices"][0]["message"]["content"]
+
         except Exception as e:
             return f"Error: {e}"
 
@@ -89,13 +88,12 @@ class Pipeline:
 
         # Check if this is a title response
         if "title" in body:
-            print(f"Title response detected: {body['title']}")
             return body
 
         messages = body.get("messages", [])
         assistant_message = get_last_assistant_message(messages)
 
-        print(f"Original message: {assistant_message}")
+        print(f"Before translate: {assistant_message}")
 
         # Translate assistant message
         translated_assistant_message = self.translate(
@@ -104,7 +102,7 @@ class Pipeline:
             self.valves.TARGET_LANGUAGE,
         )
 
-        print(f"Translated message: {translated_assistant_message}")
+        print(f"After translate: {translated_assistant_message}")
 
         # Update the last assistant message with the translated content
         for message in reversed(messages):
@@ -116,6 +114,7 @@ class Pipeline:
                 break
 
         body["messages"] = messages
+        print(f"Combined message: {body}")
         return body
 
 
@@ -140,5 +139,4 @@ def combine_messages(original: str, translated: str) -> str:
 
     # Add an extra newline after lists end
     result = re.sub(r"(\n   [^\n]+)(\n\d\.|\n-|\n[^\n])", r"\1\n\2", result)
-
     return result
