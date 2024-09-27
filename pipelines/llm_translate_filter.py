@@ -114,8 +114,8 @@ class Pipeline:
         # Translate assistant message
         translated_assistant_message = self.translate(
             assistant_message,
-            self.valves.source_assistant,
-            self.valves.target_assistant,
+            self.valves.SOURCE_LANGUAGE,
+            self.valves.TARGET_LANGUAGE,
         )
 
         print(f"Translated message: {translated_assistant_message}")
