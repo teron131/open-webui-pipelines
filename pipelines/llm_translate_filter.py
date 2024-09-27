@@ -4,19 +4,12 @@ from typing import List, Optional
 
 import requests
 from pydantic import BaseModel
-from utils.pipelines.main import get_last_assistant_message, get_last_user_message
+from utils.pipelines.main import get_last_assistant_message
 
 
 class Pipeline:
     class Valves(BaseModel):
-        # List target pipeline ids (models) that this filter will be connected to.
-        # If you want to connect this filter to all pipelines, you can set pipelines to ["*"]
-        # e.g. ["llama3:latest", "gpt-3.5-turbo"]
         pipelines: List[str] = ["*"]
-
-        # Assign a priority level to the filter pipeline.
-        # The priority level determines the order in which the filter pipelines are executed.
-        # The lower the number, the higher the priority.
         priority: int = 0
 
         OPENAI_API_BASE_URL: str = os.getenv("OPENAI_API_BASE_URL")
@@ -33,14 +26,7 @@ class Pipeline:
         DISPLAY_BOTH_LANGUAGES: bool = os.getenv("DISPLAY_BOTH_LANGUAGES", "true").lower() == "true"
 
     def __init__(self):
-        # Pipeline filters are only compatible with Open WebUI
-        # You can think of filter pipeline as a middleware that can be used to edit the form data before it is sent to the OpenAI API.
         self.type = "filter"
-
-        # Optionally, you can set the id and name of the pipeline.
-        # Best practice is to not specify the id so that it can be automatically inferred from the filename, so that users can install multiple versions of the same pipeline.
-        # The identifier must be unique across all pipelines.
-        # The identifier must be an alphanumeric string that can include underscores or hyphens. It cannot contain spaces, special characters, slashes, or backslashes.
         # self.id = "libretranslate_filter_pipeline"
         self.name = "LLM Translate Filter"
 
