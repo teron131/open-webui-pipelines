@@ -24,13 +24,17 @@ class Pipeline:
 
         # Source and target languages
         # User message will be translated from source_user to target_user
-        source_user: Optional[str] = "auto"
+        source_user: Optional[str] = "en"
         target_user: Optional[str] = "zh-TW"
 
         # Assistant languages
         # Assistant message will be translated from source_assistant to target_assistant
         source_assistant: Optional[str] = "en"
         target_assistant: Optional[str] = "zh-TW"
+
+        # New parameter to control display of both languages
+        TRANSLATE_FILTER: bool = os.getenv("TRANSLATE_FILTER", "false").lower() == "true"
+        DISPLAY_BOTH_LANGUAGES: bool = os.getenv("DISPLAY_BOTH_LANGUAGES", "true").lower() == "true"
 
     def __init__(self):
         # Pipeline filters are only compatible with Open WebUI
@@ -46,6 +50,8 @@ class Pipeline:
 
         # Initialize
         self.valves = self.Valves()
+        if not self.valves.TRANSLATE_FILTER:
+            self.valves.pipelines = []
 
         pass
 
@@ -64,9 +70,10 @@ class Pipeline:
         pass
 
     def translate(self, text: str, source: str, target: str) -> str:
-        headers = {}
-        headers["Authorization"] = f"Bearer {self.valves.OPENAI_API_KEY}"
-        headers["Content-Type"] = "application/json"
+        headers = {
+            "Authorization": f"Bearer {self.valves.OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        }
 
         payload = {
             "messages": [
@@ -85,7 +92,7 @@ class Pipeline:
                 url=f"{self.valves.OPENAI_API_BASE_URL}/chat/completions",
                 json=payload,
                 headers=headers,
-                stream=False,
+                stream=True,
             )
 
             r.raise_for_status()
@@ -94,46 +101,6 @@ class Pipeline:
             return response["choices"][0]["message"]["content"]
         except Exception as e:
             return f"Error: {e}"
-
-    def is_title_generation_request(self, body: dict) -> bool:
-        if not body.get("messages"):
-            return False
-
-        last_message = body["messages"][-1]["content"]
-        title_prompt_start = "Create a concise, 3-5 word title with an emoji as a title for the prompt in the given language. Suitable Emojis for the summary can be used to enhance understanding but avoid quotation marks or special formatting. RESPOND ONLY WITH THE TITLE TEXT."
-        title_prompt_template = os.getenv("TITLE_GENERATION_PROMPT_TEMPLATE")
-
-        return last_message.startswith(title_prompt_start) or last_message == title_prompt_template
-
-    async def inlet(self, body: dict, user: Optional[dict] = None) -> dict:
-        print(f"inlet:{__name__}")
-
-        # Check if this is a title generation request
-        if self.is_title_generation_request(body):
-            return body
-
-        messages = body.get("messages", [])
-        user_message = get_last_user_message(messages)
-
-        print(f"User message: {user_message}")
-
-        # Translate user message
-        translated_user_message = self.translate(
-            user_message,
-            self.valves.source_user,
-            self.valves.target_user,
-        )
-
-        print(f"Translated user message: {translated_user_message}")
-
-        # Update the last user message with the translated content
-        for message in reversed(messages):
-            if message["role"] == "user":
-                message["content"] = translated_user_message
-                break
-
-        body["messages"] = messages
-        return body
 
     async def outlet(self, body: dict, user: Optional[dict] = None) -> dict:
         print(f"outlet:{__name__}")
@@ -146,7 +113,7 @@ class Pipeline:
         messages = body.get("messages", [])
         assistant_message = get_last_assistant_message(messages)
 
-        print(f"Assistant message: {assistant_message}")
+        print(f"Original message: {assistant_message}")
 
         # Translate assistant message
         translated_assistant_message = self.translate(
@@ -155,12 +122,15 @@ class Pipeline:
             self.valves.target_assistant,
         )
 
-        print(f"Translated assistant message: {translated_assistant_message}")
+        print(f"Translated message: {translated_assistant_message}")
 
         # Update the last assistant message with the translated content
         for message in reversed(messages):
             if message["role"] == "assistant":
-                message["content"] = translated_assistant_message
+                if self.valves.DISPLAY_BOTH_LANGUAGES:
+                    message["content"] = f"{assistant_message}\n\n{translated_assistant_message}"
+                else:
+                    message["content"] = translated_assistant_message
                 break
 
         body["messages"] = messages
