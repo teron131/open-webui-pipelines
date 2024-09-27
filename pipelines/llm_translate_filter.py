@@ -21,17 +21,12 @@ class Pipeline:
 
         OPENAI_API_BASE_URL: str = os.getenv("OPENAI_API_BASE_URL")
         OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
-        TASK_MODEL: str = os.getenv("TASK_MODEL_EXTERNAL")
+        TRANSLATE_MODEL: str = os.getenv("TRANSLATE_MODEL", "gpt-4o-mini")
 
-        # Source and target languages
-        # User message will be translated from source_user to target_user
-        source_user: Optional[str] = "en"
-        target_user: Optional[str] = "zh-TW"
-
-        # Assistant languages
-        # Assistant message will be translated from source_assistant to target_assistant
-        source_assistant: Optional[str] = "en"
-        target_assistant: Optional[str] = "zh-TW"
+        # Translate languages
+        # Assistant message will be translated from SOURCE_LANGUAGE to TARGET_LANGUAGE
+        SOURCE_LANGUAGE: Optional[str] = os.getenv("SOURCE_LANGUAGE", "en")
+        TARGET_LANGUAGE: Optional[str] = os.getenv("TARGET_LANGUAGE", "zh-TW")
 
         # New parameter to control display of both languages
         TRANSLATE_FILTER: bool = os.getenv("TRANSLATE_FILTER", "false").lower() == "true"
@@ -84,7 +79,7 @@ class Pipeline:
                 },
                 {"role": "user", "content": text},
             ],
-            "model": self.valves.TASK_MODEL,
+            "model": self.valves.TRANSLATE_MODEL,
         }
         print(payload)
 
