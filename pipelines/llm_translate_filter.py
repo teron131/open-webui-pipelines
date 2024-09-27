@@ -3,7 +3,6 @@ from typing import List, Optional
 
 import requests
 from pydantic import BaseModel
-from schemas import OpenAIChatMessage
 from utils.pipelines.main import get_last_assistant_message, get_last_user_message
 
 
