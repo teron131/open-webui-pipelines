@@ -9,7 +9,7 @@ from utils.pipelines.main import get_last_assistant_message
 
 class Pipeline:
     class Valves(BaseModel):
-        pipelines: List[str] = ["*"]
+        pipelines: List[str] = os.getenv("TRANSLATE_FILTER_PIPELINES", "*").split(";")
         priority: int = 0
 
         OPENAI_API_BASE_URL: str = os.getenv("OPENAI_API_BASE_URL")
