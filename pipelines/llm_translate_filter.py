@@ -21,8 +21,8 @@ class Pipeline:
 
         # Translate languages
         # Assistant message will be translated from SOURCE_LANGUAGE to TARGET_LANGUAGE
-        SOURCE_LANGUAGE: Optional[str] = os.getenv("SOURCE_LANGUAGE", "en")
-        TARGET_LANGUAGE: Optional[str] = os.getenv("TARGET_LANGUAGE", "zh-TW")
+        # SOURCE_LANGUAGE: Optional[str] = os.getenv("SOURCE_LANGUAGE", "en")
+        # TARGET_LANGUAGE: Optional[str] = os.getenv("TARGET_LANGUAGE", "zh-TW")
 
     def __init__(self):
         self.type = "filter"
@@ -50,7 +50,7 @@ class Pipeline:
         # This function is called when the valves are updated.
         pass
 
-    def translate(self, text: str, source: str, target: str) -> str:
+    def translate(self, text: str) -> str:
         headers = {
             "Authorization": f"Bearer {self.valves.OPENAI_API_KEY}",
             "Content-Type": "application/json",
@@ -60,7 +60,7 @@ class Pipeline:
             "messages": [
                 {
                     "role": "system",
-                    "content": f"Translate the following text to {target}. Provide only the translated text and nothing else.",
+                    "content": f"If the following text is in English, translate to Traditional Chinese. If the following text is in Traditional Chinese, translate to English. Provide only the translated text and nothing else.",
                 },
                 {"role": "user", "content": text},
             ],
@@ -95,11 +95,7 @@ class Pipeline:
         print(f"Before translate: {assistant_message}")
 
         # Translate assistant message
-        translated_assistant_message = self.translate(
-            assistant_message,
-            self.valves.SOURCE_LANGUAGE,
-            self.valves.TARGET_LANGUAGE,
-        )
+        translated_assistant_message = self.translate(assistant_message)
 
         print(f"After translate: {translated_assistant_message}")
 
@@ -118,24 +114,60 @@ class Pipeline:
 
 
 def combine_messages(original: str, translated: str) -> str:
-    def split_message(message: str) -> list:
-        parts = re.split(r"\n|(?<=```)", message)
-        return [part.strip() for part in parts if part.strip() or part == "```"]
+    """
+    Combine original and translated messages, preserving formatting and structure.
 
-    def format_part(orig: str, trans: str) -> str:
-        if orig.startswith("```"):
-            return orig
-        elif orig[0].isdigit() and orig[1] == "." or orig[0] == "-":
-            return f"{orig}\n   {trans.strip()}"
-        else:
-            return f"{orig}\n{trans}"
+    This function takes two strings, an original message and its translation,
+    and combines them into a single string. It preserves the structure of the
+    original message, including code blocks and list formatting, while
+    inserting the translated text appropriately.
+
+    Args:
+        original (str): The original message text.
+        translated (str): The translated message text.
+
+    Returns:
+        str: A combined string containing both the original and translated text,
+             with preserved formatting and structure.
+
+    The function performs the following steps:
+    1. Splits both messages into parts, preserving newlines and code blocks.
+    2. Removes numbering or bullet points from the translated parts.
+    3. Combines the parts, keeping code blocks intact and formatting list items.
+    4. Adjusts spacing around lists and code blocks for better readability.
+    5. Removes excessive newlines to clean up the final output.
+
+    Note: This function assumes that the original and translated messages have
+    a similar structure and number of parts.
+    """
+
+    def split_message(message: str) -> list:
+        # Split by newlines, or start and end of code blocks
+        parts = re.split(r"(\n|```(?:\w+)?(?:\s*\n|$))", message)
+        return [re.sub(r"\n{1,}", "", part) for part in parts if part.strip() or part == "```"]
 
     original_parts = split_message(original)
-    translated_parts = [p.lstrip("- ").lstrip("0123456789.") for p in split_message(translated)]
+    translated_parts = [re.sub(r"^[-\d.]+\s*", "", part) for part in split_message(translated)]
 
-    combined = [format_part(orig, trans) for orig, trans in zip(original_parts, translated_parts)]
+    combined = []
+    inside_code_block = False
+    for orig, trans in zip(original_parts, translated_parts):
+        if orig.startswith("```"):
+            inside_code_block = not inside_code_block
+            combined.append(orig)
+        elif inside_code_block:
+            combined.append(orig)
+        elif orig[0].isdigit() and orig[1] == "." or orig[0] == "-":
+            combined.append(f"{orig.strip()}\n   {trans.strip()}")
+        else:
+            combined.append(f"{orig.strip()}\n{trans.strip()}")
     result = "\n".join(combined)
 
-    # Add an extra newline after lists end for display
-    result = re.sub(r"(\n   [^\n]+)(\n\d\.|\n-|\n[^\n])", r"\1\n\2", result)
+    # Add an extra newline after lists end for display, but not after code blocks
+    result = re.sub(r"(\n   [^\n]+)(\n\d+\.|\n-)", r"\1\n\2", result)
+    # Add newlines before and after code blocks
+    result = re.sub(r"((?<!\n\n)```\s*\w*\s*\n[^`]+\n```(?!\n\n))", r"\n\1\n", result)
+    # Remove more than 2 newlines
+    result = re.sub(r"\n{3,}", r"\n\n", result)
+
     return result
