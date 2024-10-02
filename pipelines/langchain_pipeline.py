@@ -37,7 +37,6 @@ class Pipeline:
         # This is where you can add your custom pipelines like RAG.
         print(f"pipe:{__name__}")
 
-        OPENAI_API_KEY = self.valves.OPENAI_API_KEY
         MODEL = self.valves.MODEL
         MODEL_PROVIDER = self.valves.MODEL_PROVIDER
 
