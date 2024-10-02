@@ -1,7 +1,8 @@
-from typing import List, Union, Generator, Iterator
-from pydantic import BaseModel
 import os
+from typing import Generator, Iterator, List, Union
+
 import requests
+from pydantic import BaseModel
 
 
 class Pipeline:
@@ -31,9 +32,7 @@ class Pipeline:
         print(f"on_shutdown:{__name__}")
         pass
 
-    def pipe(
-        self, user_message: str, model_id: str, messages: List[dict], body: dict
-    ) -> Union[str, Generator, Iterator]:
+    def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
         # This is where you can add your custom pipelines like RAG.
         print(f"pipe:{__name__}")
 
@@ -53,16 +52,8 @@ class Pipeline:
         payload = {
             "approach": "rrr",
             "history": messages,
-            "overrides": {
-                "model": BOTBUILDER_MODEL,
-                **filtered_overrides
-            },
+            "overrides": {"model": BOTBUILDER_MODEL, **filtered_overrides},
         }
-
-        # Remove unnecessary fields
-        payload.pop("user", None)
-        payload.pop("chat_id", None)
-        payload.pop("title", None)
 
         print(payload)
 
