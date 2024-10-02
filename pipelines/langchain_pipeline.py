@@ -37,17 +37,27 @@ class Pipeline:
         # This is where you can add your custom pipelines like RAG.
         print(f"pipe:{__name__}")
 
+        ## CUSTOM CHAIN
         MODEL = self.valves.MODEL
         MODEL_PROVIDER = self.valves.MODEL_PROVIDER
-
         llm = init_chat_model(model=MODEL, model_provider=MODEL_PROVIDER)
+        chain = llm
+        # ...
+        ## CUSTOM CHAIN
 
         print(body)
 
         try:
             if body["stream"]:
-                return (chunk.content for chunk in llm.stream(messages))
+                return (chunk.content for chunk in chain.stream(messages))
             else:
-                return llm.invoke(messages).content
+                return chain.invoke(messages).content
         except Exception as e:
             return f"Error: {e}"
+
+    def chain(self):
+        MODEL = self.valves.MODEL
+        MODEL_PROVIDER = self.valves.MODEL_PROVIDER
+        llm = init_chat_model(model=MODEL, model_provider=MODEL_PROVIDER)
+        chain = llm
+        return chain
