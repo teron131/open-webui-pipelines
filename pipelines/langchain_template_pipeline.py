@@ -55,6 +55,7 @@ class Pipeline:
         except Exception as e:
             return f"Error: {e}"
 
+    # CUSTOM CHAIN A FUNCTION
     def chain(self):
         MODEL = self.valves.MODEL
         MODEL_PROVIDER = self.valves.MODEL_PROVIDER
