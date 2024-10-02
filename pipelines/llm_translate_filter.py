@@ -152,13 +152,16 @@ def combine_messages(original: str, translated: str) -> str:
     combined = []
     inside_code_block = False
     for orig, trans in zip(original_parts, translated_parts):
+        if orig == trans and not orig.startswith("```") and not inside_code_block:
+            combined.append(orig)
+            continue
         if orig.startswith("```"):
             inside_code_block = not inside_code_block
             combined.append(orig)
         elif inside_code_block:
             combined.append(orig)
         elif orig[0].isdigit() and orig[1] == "." or orig[0] == "-":
-            combined.append(f"{orig.strip()}\n   {trans.strip()}")
+            combined.append(f"{orig.strip()}\n\n   {trans.strip()}")
         else:
             combined.append(f"{orig.strip()}\n{trans.strip()}")
     result = "\n".join(combined)
@@ -166,7 +169,7 @@ def combine_messages(original: str, translated: str) -> str:
     # Add an extra newline after lists end for display, but not after code blocks
     result = re.sub(r"(\n   [^\n]+)(\n\d+\.|\n-)", r"\1\n\2", result)
     # Add newlines before and after code blocks
-    result = re.sub(r"((?<!\n\n)```\s*\w*\s*\n[^`]+\n```(?!\n\n))", r"\n\1\n", result)
+    result = re.sub(r"((?<!\n\n)```(?:\s*\w*)?(?:\s*\n|$)[^`]+\n```(?!\n\n))", r"\n\1\n", result)
     # Remove more than 2 newlines
     result = re.sub(r"\n{3,}", r"\n\n", result)
 
