@@ -10,7 +10,6 @@ class Pipeline:
         OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
         MODEL: str = os.getenv("MODEL", "gpt-4o-mini")
         MODEL_PROVIDER: str = os.getenv("MODEL_PROVIDER", "")
-
         pass
 
     def __init__(self):
