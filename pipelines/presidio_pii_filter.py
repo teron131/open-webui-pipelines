@@ -27,7 +27,7 @@ class Pipeline:
 
     def __init__(self):
         self.type = "filter"
-        self.id = "presidio_pii_filter"
+        # self.id = "presidio_pii_filter"
         self.name = "Presidio PII Filter"
 
         self.valves = self.Valves()
