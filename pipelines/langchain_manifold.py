@@ -38,7 +38,8 @@ class Pipeline:
         return [
             {"id": "gpt-4o", "name": "GPT-4o"},
             {"id": "gpt-4o-mini", "name": "GPT-4o-mini"},
-            {"id": self.valves.AZURE_OPENAI_DEPLOYMENT_NAME, "name": self.valves.AZURE_OPENAI_DEPLOYMENT_NAME},
+            {"id": "o1-mini", "name": "o1 mini"},
+            {"id": self.valves.AZURE_OPENAI_DEPLOYMENT_NAME, "name": "Azure GPT-4o"},
             {"id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro"},
             {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash"},
             {"id": "claude-3.5-sonnet", "name": "Claude 3.5 Sonnet"},
@@ -62,23 +63,26 @@ class Pipeline:
             return f"Error: {e}"
 
     def get_llm(self, model_id: str):
-        if "azure" in model_id:
-            llm = AzureChatOpenAI(
-                api_key=self.valves.AZURE_OPENAI_API_KEY,
-                azure_endpoint=self.valves.AZURE_OPENAI_ENDPOINT,
-                azure_deployment=self.valves.AZURE_OPENAI_DEPLOYMENT_NAME,
-                api_version=self.valves.AZURE_OPENAI_API_VERSION,
-            )
-        elif "gemini" in model_id:
-            llm = ChatGoogleGenerativeAI(model=model_id, api_key=self.valves.GEMINI_API_KEY)
-        elif "claude" in model_id:
-            llm = ChatOpenAI(
-                model=f"anthropic/{model_id}",  # Avoid making model_id with '/', otherwise it will mess up the FastAPI URL
-                base_url="https://openrouter.ai/api/v1",
-                api_key=self.valves.OPENROUTER_API_KEY,
-            )
-        elif "gpt" in model_id:
-            llm = ChatOpenAI(model=model_id, api_key=self.valves.OPENAI_API_KEY)
-        else:
+        try:
+            if "azure" in model_id:
+                llm = AzureChatOpenAI(
+                    api_key=self.valves.AZURE_OPENAI_API_KEY,
+                    azure_endpoint=self.valves.AZURE_OPENAI_ENDPOINT,
+                    azure_deployment=self.valves.AZURE_OPENAI_DEPLOYMENT_NAME,
+                    api_version=self.valves.AZURE_OPENAI_API_VERSION,
+                )
+            elif "gemini" in model_id:
+                llm = ChatGoogleGenerativeAI(model=model_id, api_key=self.valves.GEMINI_API_KEY)
+            elif "claude" in model_id:
+                llm = ChatOpenAI(
+                    model=f"anthropic/{model_id}",  # Avoid making model_id with '/', otherwise it will mess up the FastAPI URL
+                    base_url="https://openrouter.ai/api/v1",
+                    api_key=self.valves.OPENROUTER_API_KEY,
+                )
+            elif "gpt" in model_id:
+                llm = ChatOpenAI(model=model_id, api_key=self.valves.OPENAI_API_KEY)
+            else:
+                llm = init_chat_model(model=model_id)
+        except Exception as e:
             raise ValueError(f"Invalid model_id: {model_id}")
         return llm
