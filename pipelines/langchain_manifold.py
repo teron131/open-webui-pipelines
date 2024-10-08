@@ -17,6 +17,9 @@ class Pipeline:
         AZURE_OPENAI_API_VERSION: str = os.getenv("AZURE_OPENAI_API_VERSION", "")
         GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
         OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+        LANGCHAIN_TRACING_V2: bool = os.getenv("LANGCHAIN_TRACING_V2", "false").lower() == "true"
+        LANGCHAIN_API_KEY: str = os.getenv("LANGCHAIN_API_KEY", "")
+        LANGCHAIN_PROJECT: str = os.getenv("LANGCHAIN_PROJECT", "")
         pass
 
     def __init__(self):
