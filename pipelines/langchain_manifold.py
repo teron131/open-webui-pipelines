@@ -1,7 +1,11 @@
 import os
 from typing import Generator, Iterator, List, Union
 
+from langchain.agents.agent import AgentExecutor
+from langchain.agents.tool_calling_agent.base import create_tool_calling_agent
 from langchain.chat_models.base import init_chat_model
+from langchain_core.prompts.chat import ChatPromptTemplate
+from langchain_core.tools import tool
 from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 from langchain_openai.chat_models.azure import AzureChatOpenAI
 from langchain_openai.chat_models.base import ChatOpenAI
@@ -53,15 +57,18 @@ class Pipeline:
         print(f"model_id: {model_id}")
 
         llm = self.get_llm(model_id)
-        chain = llm
+        tools = self.get_tools()
+        chain = self.universal_chain(llm, tools)
 
         print(body)
 
         try:
             if body["stream"]:
-                return (chunk.content for chunk in chain.stream(messages))
+                for step in chain.stream({"input": user_message}):
+                    if "output" in step:
+                        return (chunk for chunk in step["output"])
             else:
-                return chain.invoke(messages).content
+                return chain.invoke({"input": user_message})["output"]
         except Exception as e:
             return f"Error: {e}"
 
@@ -89,3 +96,31 @@ class Pipeline:
         except Exception as e:
             raise ValueError(f"Invalid model_id: {model_id}")
         return llm
+
+    def get_tools(self):
+        @tool
+        def add(a: float, b: float) -> float:
+            """Adds a and b."""
+            return a + b
+
+        @tool
+        def multiply(a: float, b: float) -> float:
+            """Multiplies a and b."""
+            return a * b
+
+        return [add, multiply]
+
+    def universal_chain(self, llm, tools):
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", "You are a helpful assistant"),
+                ("human", "{input}"),
+                # Placeholders fill up a **list** of messages
+                ("placeholder", "{agent_scratchpad}"),
+            ]
+        )
+
+        agent = create_tool_calling_agent(llm, tools, prompt)
+        agent_executor = AgentExecutor(agent=agent, tools=tools)
+
+        return agent_executor
