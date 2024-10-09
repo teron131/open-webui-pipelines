@@ -64,11 +64,11 @@ class Pipeline:
 
         try:
             if body["stream"]:
-                for step in chain.stream({"input": user_message}):
+                for step in chain.stream({"input": messages}):
                     if "output" in step:
                         return (chunk for chunk in step["output"])
             else:
-                return chain.invoke({"input": user_message})["output"]
+                return chain.invoke({"input": messages})["output"]
         except Exception as e:
             return f"Error: {e}"
 
@@ -121,6 +121,4 @@ class Pipeline:
         )
 
         agent = create_tool_calling_agent(llm, tools, prompt)
-        agent_executor = AgentExecutor(agent=agent, tools=tools)
-
-        return agent_executor
+        return AgentExecutor(agent=agent, tools=tools)
