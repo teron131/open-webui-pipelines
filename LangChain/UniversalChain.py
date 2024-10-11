@@ -54,7 +54,7 @@ class UniversalChain:
 
         @tool
         def webloader(url: str) -> str:
-            """Load the content of a website."""
+            """Load the content of a website from url to text."""
             docs = WebBaseLoader(url).load()
             docs = [re.sub(r"\n{3,}", r"\n\n", doc.page_content) for doc in docs]
             docs_string = f"Website: {url}" + "\n\n".join(docs)
@@ -62,7 +62,7 @@ class UniversalChain:
 
         @tool
         def youtube_loader(url: str) -> str:
-            """Load the content of a YouTube video."""
+            """Load the content of a YouTube video from url to subtitles."""
             return process_youtube_video(url)
 
         return [webloader, youtube_loader]
