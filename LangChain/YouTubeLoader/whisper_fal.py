@@ -1,4 +1,7 @@
 import fal_client
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def whisper_fal_transcribe(audio_path: str, language: str = "en"):
