@@ -14,6 +14,7 @@ from langchain_core.tools import tool
 from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 from langchain_openai.chat_models.azure import AzureChatOpenAI
 from langchain_openai.chat_models.base import ChatOpenAI
+from YouTubeLoader.youtube import process_youtube_video
 
 
 class UniversalChain:
@@ -59,7 +60,12 @@ class UniversalChain:
             docs_string = f"Website: {url}" + "\n\n".join(docs)
             return docs_string
 
-        return [webloader]
+        @tool
+        def youtube_loader(url: str) -> str:
+            """Load the content of a YouTube video."""
+            return process_youtube_video(url)
+
+        return [webloader, youtube_loader]
 
     def create_chain(self):
         tool_agent_prompt = ChatPromptTemplate.from_messages(
