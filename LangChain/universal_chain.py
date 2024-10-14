@@ -64,7 +64,7 @@ class UniversalChain:
         @tool
         def youtube_loader(url: str) -> str:
             """Load the content of a YouTube video from url to subtitles."""
-            return url_to_subtitles(url, whisper_model=os.getenv("WHISPER_MODEL"))
+            return url_to_subtitles(url, whisper_model=os.getenv("WHISPER_MODEL", "hf"))
 
         return [webloader, youtube_loader]
 
