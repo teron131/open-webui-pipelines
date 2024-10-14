@@ -1,9 +1,8 @@
 import os
 from typing import Generator, Iterator, List, Union
 
+from LangChain.universal_chain import UniversalChain
 from pydantic import BaseModel
-
-from pipelines.LangChain.universal_chain import UniversalChain
 
 
 class Pipeline:

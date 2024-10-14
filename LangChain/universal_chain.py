@@ -14,7 +14,8 @@ from langchain_core.tools import tool
 from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 from langchain_openai.chat_models.azure import AzureChatOpenAI
 from langchain_openai.chat_models.base import ChatOpenAI
-from youtube_loader.youtube import url_to_subtitles
+
+from .youtube_loader.youtube import url_to_subtitles
 
 
 class UniversalChain:
