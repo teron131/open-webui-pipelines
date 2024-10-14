@@ -14,6 +14,7 @@ from langchain_core.tools import tool
 from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 from langchain_openai.chat_models.azure import AzureChatOpenAI
 from langchain_openai.chat_models.base import ChatOpenAI
+from pytubefix import YouTube
 
 from .youtube_loader.youtube import url_to_subtitles
 
@@ -63,8 +64,16 @@ class UniversalChain:
 
         @tool
         def youtube_loader(url: str) -> str:
+            # https://github.com/JuanBindez/pytubefix/blob/main/pytubefix/__main__.py
             """Load the content of a YouTube video from url to subtitles."""
-            return url_to_subtitles(url, whisper_model=os.getenv("WHISPER_MODEL", "hf"))
+            yt = YouTube(url)
+            return f"""
+Answer the user's question based on the full content.
+Title: {yt.title}
+Author: {yt.author}
+Subtitles:
+{url_to_subtitles(url)}
+            """
 
         return [webloader, youtube_loader]
 
