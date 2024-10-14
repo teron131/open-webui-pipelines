@@ -14,8 +14,7 @@ from langchain_core.tools import tool
 from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 from langchain_openai.chat_models.azure import AzureChatOpenAI
 from langchain_openai.chat_models.base import ChatOpenAI
-
-from .YouTubeLoader.youtube import process_youtube_video
+from youtube_loader.youtube import url_to_subtitles
 
 
 class UniversalChain:
@@ -64,7 +63,7 @@ class UniversalChain:
         @tool
         def youtube_loader(url: str) -> str:
             """Load the content of a YouTube video from url to subtitles."""
-            return process_youtube_video(url, whisper_model="hf")
+            return url_to_subtitles(url, whisper_model=os.getenv("WHISPER_MODEL"))
 
         return [webloader, youtube_loader]
 
