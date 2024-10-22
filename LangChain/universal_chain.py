@@ -65,7 +65,7 @@ class UniversalChain:
         @tool
         def youtube_loader(url: str) -> str:
             # https://github.com/JuanBindez/pytubefix/blob/main/pytubefix/__main__.py
-            """Load the content of a YouTube video from url to subtitles."""
+            """Load the subtitles of a YouTube video by url in form of https://www.youtube.com/watch?v=... or https://youtu.be/..."""
             yt = YouTube(url)
             return f"""
 Answer the user's question based on the full content.
