@@ -8,8 +8,9 @@ from pydantic import BaseModel
 class Pipeline:
     class Valves(BaseModel):
         OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
-        MODEL: str = os.getenv("MODEL", "gpt-4o-mini")
-        MODEL_PROVIDER: str = os.getenv("MODEL_PROVIDER", "")
+        MODEL: str = "gpt-4o-mini"
+        MODEL_PROVIDER: str = "openai"
+
         pass
 
     def __init__(self):
@@ -40,7 +41,6 @@ class Pipeline:
         MODEL = self.valves.MODEL
         MODEL_PROVIDER = self.valves.MODEL_PROVIDER
         llm = init_chat_model(model=MODEL, model_provider=MODEL_PROVIDER)
-        # e.g. chain = prompt | llm
         chain = llm
         # ...
         ## CUSTOM CHAIN
@@ -60,6 +60,5 @@ class Pipeline:
         MODEL = self.valves.MODEL
         MODEL_PROVIDER = self.valves.MODEL_PROVIDER
         llm = init_chat_model(model=MODEL, model_provider=MODEL_PROVIDER)
-        # e.g. chain = prompt | llm
         chain = llm
         return chain
