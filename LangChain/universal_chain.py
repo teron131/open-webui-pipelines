@@ -67,13 +67,7 @@ class UniversalChain:
             # https://github.com/JuanBindez/pytubefix/blob/main/pytubefix/__main__.py
             """Load the subtitles of a YouTube video by url in form such as: https://www.youtube.com/watch?v=..., https://youtu.be/..., or more."""
             yt = YouTube(url)
-            return f"""
-Answer the user's question based on the full content.
-Title: {yt.title}
-Author: {yt.author}
-Subtitles:
-{url_to_subtitles(url)}
-            """
+            return f"Answer the user's question based on the full content.\nTitle: {yt.title}\nAuthor: {yt.author}\nSubtitles:\n\n{url_to_subtitles(url)}"
 
         return [webloader, youtube_loader]
 
