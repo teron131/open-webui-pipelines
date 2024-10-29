@@ -1,4 +1,6 @@
 *.ipynb
+*.db
+*.sql
 
 .cache
 
