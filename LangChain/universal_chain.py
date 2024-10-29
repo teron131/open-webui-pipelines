@@ -3,7 +3,9 @@ import re
 from typing import Generator, Iterator, List, Union
 
 import opencc
+from langchain import hub
 from langchain.agents.agent import AgentExecutor
+from langchain.agents.react.agent import create_react_agent
 from langchain.agents.tool_calling_agent.base import create_tool_calling_agent
 from langchain.chat_models.base import init_chat_model
 from langchain_community.document_loaders import WebBaseLoader
@@ -80,7 +82,9 @@ class UniversalChain:
                 ("placeholder", "{agent_scratchpad}"),
             ]
         )
-        agent = create_tool_calling_agent(self.llm, self.tools, tool_agent_prompt)
+        # agent = create_tool_calling_agent(self.llm, self.tools, tool_agent_prompt)
+        react_prompt = hub.pull("hwchase17/react")
+        agent = create_react_agent(self.llm, self.tools, react_prompt)
         agent_executor = AgentExecutor(agent=agent, tools=self.tools)
 
         if self.use_history:
