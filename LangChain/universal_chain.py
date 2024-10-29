@@ -51,7 +51,7 @@ class UniversalChain:
             else:
                 llm = init_chat_model(model=model_id)
         except Exception as e:
-            raise ValueError(f"Invalid model_id: {model_id}")
+            raise ValueError(f"Invalid model_id: {model_id}\n{e}")
         return llm
 
     def get_tools(self):
