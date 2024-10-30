@@ -120,6 +120,8 @@ class UniversalChain:
                 if "output" in chunk:
                     for c in chunk["output"]:
                         print(c, end="")
-        elif isinstance(response, dict):
+
+        if isinstance(response, dict):
             response = response["output"]
-            print(response)
+
+        print(response)
