@@ -2,7 +2,10 @@ import os
 from typing import Generator, Iterator, List, Union
 
 from langchain.chains.sql_database.query import create_sql_query_chain
-from langchain_community.tools.sql_database.tool import QuerySQLDataBaseTool
+from langchain_community.tools.sql_database.tool import (
+    QuerySQLCheckerTool,
+    QuerySQLDataBaseTool,
+)
 from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_core.prompts.chat import PromptTemplate
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
@@ -31,13 +34,7 @@ class Pipeline:
         print(f"on_shutdown:{__name__}")
         pass
 
-    def clean_sql(self, sql):
-        sql = sql.strip("`").split("\n", 1)[-1].rsplit("\n", 1)[0]
-        return sql
-
-    def pipe(
-        self, user_message: str, model_id: str, messages: List[dict], body: dict
-    ) -> Union[str, Generator, Iterator]:
+    def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
         print(f"pipe:{__name__}")
 
         prompt = PromptTemplate.from_template(
@@ -59,13 +56,17 @@ Answer:
         write_query = create_sql_query_chain(llm, db)
         execute_query = QuerySQLDataBaseTool(db=db)
 
+        def clean_query(sql):
+            cleaned_sql = QuerySQLCheckerTool(db=db, llm=llm).invoke(sql)
+            return cleaned_sql.replace("```sql", "").replace("```", "").strip()
+
         chain = (
             RunnableParallel(
                 query=write_query,
                 question=RunnablePassthrough(),
             )
             | RunnablePassthrough.assign(question=lambda x: x["question"]["question"])
-            | RunnablePassthrough.assign(query=lambda x: self.clean_sql(x["query"]))
+            | RunnablePassthrough.assign(query=lambda x: clean_query(x["query"]))
             | RunnablePassthrough.assign(result=lambda x: execute_query.run(x["query"]))
             | prompt
             | llm
