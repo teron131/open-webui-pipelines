@@ -24,6 +24,7 @@ class Pipeline:
     def __init__(self):
         self.name = "Text-to-SQL"
         self.valves = self.Valves()
+        self.db = SQLDatabase.from_uri("sqlite:///databases/Chinook.db")
         pass
 
     async def on_startup(self):
@@ -50,14 +51,13 @@ Answer:
 """
         )
 
-        db = SQLDatabase.from_uri("sqlite:///databases/Chinook.db")
         llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
-        write_query = create_sql_query_chain(llm, db)
-        execute_query = QuerySQLDataBaseTool(db=db)
+        write_query = create_sql_query_chain(llm, self.db)
+        execute_query = QuerySQLDataBaseTool(db=self.db)
 
         def clean_query(sql):
-            cleaned_sql = QuerySQLCheckerTool(db=db, llm=llm).invoke(sql)
+            cleaned_sql = QuerySQLCheckerTool(db=self.db, llm=llm).invoke(sql)
             return cleaned_sql.replace("```sql", "").replace("```", "").strip()
 
         chain = (

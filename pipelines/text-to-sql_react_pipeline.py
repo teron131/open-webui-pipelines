@@ -25,6 +25,7 @@ class Pipeline:
     def __init__(self):
         self.name = "Text-to-SQL ReAct"
         self.valves = self.Valves()
+        self.db = SQLDatabase.from_uri("sqlite:///databases/Chinook.db")
         self.chain = self.create_chain()
         pass
 
@@ -50,9 +51,8 @@ class Pipeline:
             ]
         )
 
-        db = SQLDatabase.from_uri("sqlite:///databases/Chinook.db")
         llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-        toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+        toolkit = SQLDatabaseToolkit(db=self.db, llm=llm)
 
         agent = create_react_agent(llm, toolkit.get_tools(), combined_prompt)
         agent_executor = AgentExecutor(agent=agent, tools=toolkit.get_tools(), return_intermediate_steps=True)
