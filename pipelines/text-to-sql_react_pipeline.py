@@ -1,18 +1,14 @@
+import ast
 import os
 import re
 from typing import Generator, Iterator, List, Union
 
 from langchain import hub
 from langchain.agents.agent import AgentExecutor
-from langchain.agents.chat.output_parser import ChatOutputParser
 from langchain.agents.react.agent import create_react_agent
-from langchain.chains.sql_database.query import create_sql_query_chain
 from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
-from langchain_community.tools.sql_database.tool import QuerySQLDataBaseTool
-from langchain_community.utilities import SQLDatabase
 from langchain_community.utilities.sql_database import SQLDatabase
-from langchain_core.prompts.chat import ChatPromptTemplate, PromptTemplate
-from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+from langchain_core.prompts.chat import ChatPromptTemplate
 from langchain_openai.chat_models.base import ChatOpenAI
 from pydantic import BaseModel
 from tabulate import tabulate
@@ -66,29 +62,32 @@ class Pipeline:
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
         print(f"pipe:{__name__}")
 
-        def format_sql_query(sql: str) -> str:
-            # Keywords to add newlines before
+        def format_sql_query(query: str) -> str:
+            """Format SQL query with proper line breaks and indentation."""
             keywords = ["SELECT", "FROM", "JOIN", "WHERE", "GROUP BY", "HAVING", "ORDER BY", "LIMIT", "OFFSET"]
-            sql = " ".join(sql.strip().split())  # Remove extra whitespace and normalize spacing
+            query = " ".join(query.strip().split())  # Normalize whitespace
+
+            # Convert keywords to uppercase and add line breaks
             for keyword in keywords:
-                sql = re.sub(rf"\b{keyword}\b", keyword, sql, flags=re.IGNORECASE)  # Convert keywords to uppercase for case insensitivity
-            sql = sql.replace(" ON ", "\n    ON ")  # Handle JOIN ... ON as a special case
-            for keyword in keywords:
-                sql = sql.replace(f" {keyword} ", f"\n{keyword} ")  # Add newlines before keywords
-            return sql
+                query = re.sub(rf"\b{keyword}\b", keyword, query, flags=re.IGNORECASE)
+                query = query.replace(f" {keyword} ", f"\n{keyword} ")
+
+            # Special handling for JOIN...ON
+            query = query.replace(" ON ", "\n    ON ")
+
+            return query
 
         def data_to_table(query: str, data: str) -> str:
-            # Extract column names from SELECT statement
-            select_pattern = r"SELECT\s+(.*?)\s+FROM"
-            select_clause = re.search(select_pattern, query, re.IGNORECASE).group(1)
-            headers = [col.strip().split(" AS ")[-1].strip() for col in select_clause.split(",")]
+            """Convert SQL query results to a formatted table."""
+            # Extract column headers from SELECT clause
+            SELECT_clause = re.search(r"SELECT\s+(.*?)\s+FROM", query, re.IGNORECASE).group(1)
+            headers = [col.strip() for col in SELECT_clause.split(",")]
+            headers = [re.split(r"\s+as\s+", col.strip(), flags=re.IGNORECASE)[-1] for col in headers]
 
-            # Format data
-            if isinstance(data, str):
-                data_list = data.strip("[]").split("),")
-                data_list = [tuple(item.strip(" ()'").split("',")) for item in data_list if item.strip()]
+            # Parse data string into list of tuples
+            data_list = ast.literal_eval(data) if isinstance(data, str) else []
 
-            return tabulate(data_list, headers=headers, tablefmt="pretty")
+            return tabulate(data_list, headers, tablefmt="pretty", showindex=True)
 
         config = {"configurable": {"session_id": "text-to-sql-react-chain-session"}}
         dialect = "SQLite"
@@ -100,27 +99,16 @@ class Pipeline:
             if last_step[0].tool == "sql_db_query":
                 query = last_step[0].tool_input
                 data = last_step[1]
-            return f"{response["output"]}\n```sql\n{query}\n\n{data_to_table(query, data)}\n```"
+                table_name = re.search(r"FROM\s+(\w+)", query, re.IGNORECASE).group(1)
+
+                return f"""
+```sql
+{format_sql_query(query)}
+
+{table_name}:
+{data_to_table(query, data)}
+```
+"""
 
         except Exception as e:
             return f"Error: {e}"
-
-    def generate_response(self, input_text: str, stream: bool = False):
-        config = {"configurable": {"session_id": "text-to-sql-react-chain-session"}}
-        if stream:
-            return self.chain.stream({"input": input_text, "dialect": "SQLite", "top_k": 20}, config)
-        else:
-            return self.chain.invoke({"input": input_text, "dialect": "SQLite", "top_k": 20}, config)
-
-    @staticmethod
-    def display_response(response: Union[dict, Generator, Iterator]) -> None:
-        if isinstance(response, Generator):
-            for chunk in response:
-                if "output" in chunk:
-                    for c in chunk["output"]:
-                        print(c, end="")
-
-        if isinstance(response, dict):
-            response = response["output"]
-
-        print(response)
