@@ -100,7 +100,7 @@ class Pipeline:
             if last_step[0].tool == "sql_db_query":
                 query = last_step[0].tool_input
                 data = last_step[1]
-            return f"{response["output"]}\n```sql\n{query}\n{data_to_table(query, data)}\n```"
+            return f"{response["output"]}\n```sql\n{query}\n\n{data_to_table(query, data)}\n```"
 
         except Exception as e:
             return f"Error: {e}"
