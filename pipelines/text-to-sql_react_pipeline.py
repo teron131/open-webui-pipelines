@@ -102,6 +102,7 @@ class Pipeline:
                 table_name = re.search(r"FROM\s+(\w+)", query, re.IGNORECASE).group(1)
 
                 return f"""
+{response["output"]}
 ```sql
 {format_sql_query(query)}
 
