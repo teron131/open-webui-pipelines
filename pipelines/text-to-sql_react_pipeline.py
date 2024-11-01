@@ -62,7 +62,7 @@ class Pipeline:
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
         print(f"pipe:{__name__}")
 
-        def format_sql_query(query: str) -> str:
+        def format_query(query: str) -> str:
             """Format SQL query with proper line breaks and indentation."""
             keywords = ["SELECT", "FROM", "JOIN", "WHERE", "GROUP BY", "HAVING", "ORDER BY", "LIMIT", "OFFSET"]
             query = " ".join(query.strip().split())  # Normalize whitespace
@@ -104,7 +104,7 @@ class Pipeline:
                 return f"""
 {response["output"]}
 ```sql
-{format_sql_query(query)}
+{format_query(query)}
 
 {table_name}:
 {data_to_table(query, data)}
