@@ -83,7 +83,7 @@ Answer:
 
         llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
-        write_query = create_sql_query_chain(llm, self.db)
+        write_query = create_sql_query_chain(llm, self.db, k=20)
         execute_query = QuerySQLDataBaseTool(db=self.db)
 
         def clean_query(sql):
@@ -111,7 +111,7 @@ Answer:
         try:
             result = chain.invoke({"question": user_message})
             return f"""
-{result["answer"]}
+{result["answer"].content}
 
 ```sql
 {format_query(result["query"])}
