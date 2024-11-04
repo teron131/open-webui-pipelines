@@ -86,9 +86,9 @@ Answer:
         write_query = create_sql_query_chain(llm, self.db, k=20)
         execute_query = QuerySQLDataBaseTool(db=self.db)
 
-        def clean_query(sql):
-            cleaned_sql = QuerySQLCheckerTool(db=self.db, llm=llm).invoke(sql)
-            return cleaned_sql.replace("```sql", "").replace("```", "").strip()
+        def clean_query(query: str) -> str:
+            cleaned_query = QuerySQLCheckerTool(db=self.db, llm=llm).invoke(query)
+            return cleaned_query.replace("```sql", "").replace("```", "").strip()
 
         chain = (
             RunnableParallel(
@@ -112,7 +112,6 @@ Answer:
             result = chain.invoke({"question": user_message})
             return f"""
 {result["answer"].content}
-
 ```sql
 {format_query(result["query"])}
 

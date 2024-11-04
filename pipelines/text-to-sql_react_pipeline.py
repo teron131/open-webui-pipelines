@@ -35,11 +35,6 @@ class Pipeline:
 
     async def on_shutdown(self):
         print(f"on_shutdown:{__name__}")
-        pass
-
-    def clean_sql(self, sql):
-        sql = sql.strip("`").split("\n", 1)[-1].rsplit("\n", 1)[0]
-        return sql
 
     def create_chain(self):
         sql_prompt = hub.pull("langchain-ai/sql-agent-system-prompt")
@@ -55,7 +50,12 @@ class Pipeline:
         toolkit = SQLDatabaseToolkit(db=self.db, llm=llm)
 
         agent = create_react_agent(llm, toolkit.get_tools(), combined_prompt)
-        agent_executor = AgentExecutor(agent=agent, tools=toolkit.get_tools(), return_intermediate_steps=True)
+        agent_executor = AgentExecutor(
+            agent=agent,
+            tools=toolkit.get_tools(),
+            return_intermediate_steps=True,
+            handle_parsing_errors=True,
+        )
 
         return agent_executor
 
@@ -110,6 +110,8 @@ class Pipeline:
 {data_to_table(query, data)}
 ```
 """
+            else:
+                return response["output"]
 
         except Exception as e:
             return f"Error: {e}"
