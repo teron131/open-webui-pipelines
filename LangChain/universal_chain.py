@@ -87,7 +87,7 @@ class UniversalChain:
         react_prompt = hub.pull("hwchase17/react")
         agent = create_react_agent(self.llm, self.tools, react_prompt)
 
-        agent_executor = AgentExecutor(agent=agent, tools=self.tools)
+        agent_executor = AgentExecutor(agent=agent, tools=self.tools, handle_parsing_errors=True)
 
         if self.use_history:
             return RunnableWithMessageHistory(
