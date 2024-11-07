@@ -60,6 +60,6 @@ class Pipeline:
             #         if "output" in step:
             #             return (chunk for chunk in step["output"])
             # else:
-            return chain.generate_response(messages)["output"]
+            return chain.generate_response(input_text=user_message)
         except Exception as e:
             return f"Error: {e}"
