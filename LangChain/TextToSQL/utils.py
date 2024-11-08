@@ -61,12 +61,14 @@ def data_to_table(query: str, data: str) -> str:
         | 1 | Bob   |  30 |
         +---+-------+-----+
     """
-    # Extract column headers from SELECT clause
-    SELECT_clause = re.search(r"SELECT\s+(.*?)\s+FROM", query, re.IGNORECASE).group(1)
-    headers = [col.strip() for col in SELECT_clause.split(",")]
-    headers = [re.split(r"\s+as\s+", col.strip(), flags=re.IGNORECASE)[-1] for col in headers]
+    headers = []
+    if query and isinstance(query, str):  # Check if query exists and is a string
+        # Extract column headers from SELECT clause
+        SELECT_clause = re.search(r"SELECT\s+(.*?)\s+FROM", query, re.IGNORECASE).group(1)
+        headers = [col.strip() for col in SELECT_clause.split(",")]
+        headers = [re.split(r"\s+as\s+", col.strip(), flags=re.IGNORECASE)[-1] for col in headers]
 
-    # Parse data string into list of tuples
-    data_list = ast.literal_eval(data) if isinstance(data, str) else []
+    # Parse data string into list of tuples - handle empty string case
+    data_list = ast.literal_eval(data) if (isinstance(data, str) and data.strip()) else []
 
     return tabulate(data_list, headers, tablefmt="pretty", showindex=True)

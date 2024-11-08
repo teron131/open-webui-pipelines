@@ -1,12 +1,11 @@
 import re
 
 from langchain import hub
-from langchain.agents.agent import AgentExecutor
-from langchain.agents.react.agent import create_react_agent
-from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
-from langchain_community.utilities.sql_database import SQLDatabase
-from langchain_core.prompts.chat import ChatPromptTemplate
-from langchain_openai.chat_models.base import ChatOpenAI
+from langchain_community.agent_toolkits import SQLDatabaseToolkit
+from langchain_community.utilities import SQLDatabase
+from langchain_core.messages import AIMessage, ToolMessage
+from langchain_openai import ChatOpenAI
+from langgraph.prebuilt import create_react_agent
 
 from .utils import data_to_table, format_query
 
@@ -31,38 +30,46 @@ def text_to_sql_react(user_message: str, db: SQLDatabase) -> str:
             - Query results in table format
     """
     sql_prompt = hub.pull("langchain-ai/sql-agent-system-prompt")
-    react_prompt = hub.pull("hwchase17/react")
-    combined_prompt = ChatPromptTemplate.from_messages(
-        [
-            *sql_prompt.messages,
-            ("system", react_prompt.template),
-        ]
-    )
+    sql_system_prompt = sql_prompt.messages[0].prompt.template
 
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 
-    agent = create_react_agent(llm, toolkit.get_tools(), combined_prompt)
-    agent_executor = AgentExecutor(
-        agent=agent,
-        tools=toolkit.get_tools(),
-        return_intermediate_steps=True,
-        handle_parsing_errors=True,
-    )
+    agent = create_react_agent(llm, toolkit.get_tools(), state_modifier=sql_system_prompt)
 
     config = {"configurable": {"session_id": "text-to-sql-react-chain-session"}}
     dialect = "SQLite"
     top_k = 20
 
     try:
-        response = agent_executor.invoke({"input": user_message, "dialect": dialect, "top_k": top_k}, config)
-        last_step = response["intermediate_steps"][-1]
-        if last_step[0].tool == "sql_db_query":
-            query = last_step[0].tool_input
-            data = last_step[1]
-            table_name = re.search(r"FROM\s+(\w+)", query, re.IGNORECASE).group(1)
+        response = agent.invoke(
+            {
+                "messages": [("user", user_message)],
+                "dialect": dialect,
+                "top_k": top_k,
+            },
+            config,
+        )
+
+        # Trace the query execution in reverse manner
+        reversed_messages = reversed(response["messages"])
+
+        answer_msg = next((msg for msg in reversed_messages if isinstance(msg, AIMessage)), None)
+        answer = answer_msg.content if answer_msg else ""
+
+        data_msg = next((msg for msg in reversed_messages if isinstance(msg, ToolMessage) and msg.name == "sql_db_query"), None)
+        data = data_msg.content if data_msg else ""
+        query_call_id = data_msg.tool_call_id if data_msg else ""
+
+        # Find the query execution matching the query call id
+        query_msg = next((msg for msg in reversed_messages if isinstance(msg, AIMessage) and msg.tool_calls and any(call["id"] == query_call_id for call in msg.tool_calls)), None)
+        query = query_msg.tool_calls[0]["args"]["query"] if query_msg else ""
+
+        table_name = re.search(r"FROM\s+(\w+)", query, re.IGNORECASE).group(1) if query != "" else ""
+
+        if data and query:
             return f"""
-{response["output"]}
+{answer}
 ```sql
 {format_query(query)}
 
@@ -71,7 +78,7 @@ def text_to_sql_react(user_message: str, db: SQLDatabase) -> str:
 ```
 """
         else:
-            return response["output"]
+            return answer
 
     except Exception as e:
         return f"{e}"
