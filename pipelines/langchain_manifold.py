@@ -36,8 +36,10 @@ class Pipeline:
 
     def get_models(self):
         return [
-            {"id": "gpt-4o-2024-08-06", "name": "GPT-4o"},
+            {"id": "gpt-4o-2024-11-20", "name": "GPT-4o"},
+            {"id": "chatgpt-4o-latest", "name": "ChatGPT-4o"},
             {"id": "gpt-4o-mini", "name": "GPT-4o-mini"},
+            {"id": "o1-preview", "name": "o1 preview"},
             {"id": "o1-mini", "name": "o1 mini"},
             {"id": self.valves.AZURE_OPENAI_DEPLOYMENT_NAME, "name": "Azure GPT-4o"},
             {"id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro"},
