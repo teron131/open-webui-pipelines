@@ -1,8 +1,8 @@
 import os
 from typing import Generator, Iterator, List, Union
 
-from LangChain.TextToSQL.simple import text_to_sql
 from langchain_community.utilities.sql_database import SQLDatabase
+from langchain_playground.TextToSQL import text_to_sql
 from pydantic import BaseModel
 
 

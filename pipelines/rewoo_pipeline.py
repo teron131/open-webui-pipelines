@@ -1,7 +1,7 @@
 import os
 from typing import Generator, Iterator, List, Union
 
-from LangChain.ReWOO.graph import rewoo
+from langchain_playground.ReWOO import rewoo
 from pydantic import BaseModel
 
 

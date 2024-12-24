@@ -1,7 +1,7 @@
 import os
 from typing import Generator, Iterator, List, Union
 
-from LangChain.universal_chain import UniversalChain
+from langchain_playground import UniversalChain
 from pydantic import BaseModel
 
 
