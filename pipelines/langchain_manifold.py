@@ -36,15 +36,15 @@ class Pipeline:
 
     def get_models(self):
         return [
-            {"id": "gpt-4o-2024-11-20", "name": "GPT-4o"},
             {"id": "chatgpt-4o-latest", "name": "ChatGPT-4o"},
             {"id": "gpt-4o-mini", "name": "GPT-4o-mini"},
-            {"id": "o1-preview", "name": "o1 preview"},
+            {"id": "o1", "name": "o1"},
             {"id": "o1-mini", "name": "o1 mini"},
             {"id": self.valves.AZURE_OPENAI_DEPLOYMENT_NAME, "name": "Azure GPT-4o"},
             {"id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro"},
-            {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash"},
+            {"id": "gemini-2.0-flash-exp", "name": "Gemini 2.0 Flash"},
             {"id": "claude-3.5-sonnet", "name": "Claude 3.5 Sonnet"},
+            {"id": "deepseek-chat", "name": "DeepSeek Chat"},
         ]
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
