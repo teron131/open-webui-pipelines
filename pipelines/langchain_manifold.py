@@ -3,8 +3,7 @@ from typing import Generator, Iterator, List, Union
 
 from langchain.schema import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_playground.UniversalChain import get_llm, get_tools
-from langgraph.prebuilt import create_react_agent
+from langchain_playground.UniversalChain import UniversalChain
 from pydantic import BaseModel
 
 
@@ -68,28 +67,13 @@ class Pipeline:
         print(body)
 
         try:
-            # Create LLM and tools
-            llm = get_llm(model_id)
-            tools = get_tools()
 
             # From UI's messages list to prompt for state_modifier
             lc_messages = [HumanMessage(content=msg["content"]) if msg["role"] == "user" else AIMessage(content=msg["content"]) for msg in messages if msg["role"] in ("user", "assistant")]
             history_prompt = ChatPromptTemplate.from_messages(lc_messages)
 
-            # Create agent with history
-            agent = create_react_agent(
-                llm,
-                tools,
-                state_modifier=history_prompt,
-            )
-
-            # Invoke agent
-            config = {"configurable": {"thread_id": "universal-chain-session"}}
-            response = agent.invoke(
-                {"messages": [("user", user_message)]},
-                config,
-            )
-            return response["messages"][-1].content
+            chain = UniversalChain(provider="openai", model_id=model_id, state_modifier=history_prompt)
+            return chain.invoke(user_message)
 
         except Exception as e:
             return f"Error: {e}"
