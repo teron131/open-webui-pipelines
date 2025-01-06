@@ -1,7 +1,10 @@
 import os
 from typing import Generator, Iterator, List, Union
 
-from langchain_playground.UniversalChain import UniversalChain
+from langchain.schema import AIMessage, HumanMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_playground.UniversalChain import get_llm, get_tools
+from langgraph.prebuilt import create_react_agent
 from pydantic import BaseModel
 
 
@@ -49,20 +52,44 @@ class Pipeline:
         ]
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
+        """Generate a response using a language model chain.
+
+        Args:
+            user_message (str): The input message from the user
+            model_id (str): ID of the language model to use
+            messages (List[dict]): List of conversation messages
+            body (dict): Additional request parameters
+
+        Returns:
+            Union[str, Generator, Iterator]: Generated response or stream of responses
+        """
         print(f"pipe:{__name__}")
         print(f"model_id: {model_id}")
-
-        chain = UniversalChain(model_name=model_id, use_history=True)
-
         print(body)
 
         try:
-            # TODO: IT DOES NOT WORK
-            # if body["stream"]:
-            #     for step in chain.generate_response(messages):
-            #         if "output" in step:
-            #             return (chunk for chunk in step["output"])
-            # else:
-            return chain.invoke(input_text=user_message)
+            # Create LLM and tools
+            llm = get_llm(model_id)
+            tools = get_tools()
+
+            # From UI's messages list to prompt for state_modifier
+            lc_messages = [HumanMessage(content=msg["content"]) if msg["role"] == "user" else AIMessage(content=msg["content"]) for msg in messages if msg["role"] in ("user", "assistant")]
+            history_prompt = ChatPromptTemplate.from_messages(lc_messages)
+
+            # Create agent with history
+            agent = create_react_agent(
+                llm,
+                tools,
+                state_modifier=history_prompt,
+            )
+
+            # Invoke agent
+            config = {"configurable": {"thread_id": "universal-chain-session"}}
+            response = agent.invoke(
+                {"messages": [("user", user_message)]},
+                config,
+            )
+            return response["messages"][-1].content
+
         except Exception as e:
             return f"Error: {e}"
