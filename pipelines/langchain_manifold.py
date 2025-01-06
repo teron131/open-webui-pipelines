@@ -1,7 +1,7 @@
 import os
 from typing import Generator, Iterator, List, Union
 
-from langchain_playground import UniversalChain
+from langchain_playground.UniversalChain import UniversalChain
 from pydantic import BaseModel
 
 
@@ -37,6 +37,7 @@ class Pipeline:
     def get_models(self):
         return [
             {"id": "chatgpt-4o-latest", "name": "ChatGPT-4o"},
+            {"id": "gpt-4o-2024-11-20", "name": "GPT-4o"},
             {"id": "gpt-4o-mini", "name": "GPT-4o-mini"},
             {"id": "o1", "name": "o1"},
             {"id": "o1-mini", "name": "o1 mini"},
@@ -62,6 +63,6 @@ class Pipeline:
             #         if "output" in step:
             #             return (chunk for chunk in step["output"])
             # else:
-            return chain.generate_response(input_text=user_message)
+            return chain.invoke(input_text=user_message)
         except Exception as e:
             return f"Error: {e}"
