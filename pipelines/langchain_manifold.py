@@ -67,13 +67,12 @@ class Pipeline:
         print(body)
 
         try:
+            # Convert UI messages to LangChain format
+            lc_messages = [(msg["role"], msg["content"]) for msg in messages if msg["role"] in ["user", "assistant"]]
 
-            # From UI's messages list to prompt for state_modifier
-            lc_messages = [HumanMessage(content=msg["content"]) if msg["role"] == "user" else AIMessage(content=msg["content"]) for msg in messages if msg["role"] in ("user", "assistant")]
-            history_prompt = ChatPromptTemplate.from_messages(lc_messages)
+            chain = UniversalChain(model_id=model_id)
 
-            chain = UniversalChain(provider="openai", model_id=model_id, state_modifier=history_prompt)
-            return chain.invoke(user_message)
+            return chain.invoke(user_message, message_history=lc_messages)
 
         except Exception as e:
             return f"Error: {e}"
