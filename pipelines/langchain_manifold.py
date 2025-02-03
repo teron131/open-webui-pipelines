@@ -38,16 +38,17 @@ class Pipeline:
 
     def get_models(self):
         return [
-            {"id": "chatgpt-4o-latest", "name": "ChatGPT-4o"},
-            {"id": "gpt-4o-2024-11-20", "name": "GPT-4o"},
             {"id": "gpt-4o-mini", "name": "GPT-4o-mini"},
-            {"id": "o1", "name": "o1"},
+            {"id": "gpt-4o-2024-11-20", "name": "GPT-4o"},
             {"id": "o1-mini", "name": "o1 mini"},
-            {"id": self.valves.AZURE_OPENAI_DEPLOYMENT_NAME, "name": "Azure GPT-4o"},
-            {"id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro"},
+            {"id": "o1", "name": "o1"},
+            {"id": "o3-mini", "name": "o3 mini"},
             {"id": "gemini-2.0-flash-exp", "name": "Gemini 2.0 Flash"},
+            {"id": "gemini-2.0-flash-thinking-exp", "name": "Gemini 2.0 Flash Thinking"},
+            {"id": "gemini-exp-1206", "name": "Gemini Experimental"},
             {"id": "claude-3.5-sonnet", "name": "Claude 3.5 Sonnet"},
-            {"id": "deepseek-chat", "name": "DeepSeek Chat"},
+            {"id": "deepseek-chat", "name": "DeepSeek V3"},
+            {"id": "deepseek-deepseek-r1", "name": "DeepSeek R1"},
         ]
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
