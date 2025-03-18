@@ -5,6 +5,8 @@
 # Pipelines: UI-Agnostic OpenAI API Plugin Framework
 
 > [!TIP]
+> **You probably don't need Pipelines!**
+>
 > If your goal is simply to add support for additional providers like Anthropic or basic filters, you likely don't need Pipelines . For those cases, Open WebUI Functions are a better fit—it's built-in, much more convenient, and easier to configure. Pipelines, however, comes into play when you're dealing with computationally heavy tasks (e.g., running large models or complex logic) that you want to offload from your main Open WebUI instance for better performance and scalability.
 
 
@@ -100,6 +102,38 @@ Get started with Pipelines in a few easy steps:
    ```
 
 Once the server is running, set the OpenAI URL on your client to the Pipelines URL. This unlocks the full capabilities of Pipelines, integrating any Python library and creating custom workflows tailored to your needs.
+
+### Advanced Docker Builds
+If you create your own pipelines, you can install them when the Docker image is built.  For example,
+create a bash script with the snippet below to collect files from a path, add them as install URLs, 
+and build the Docker image with the new pipelines automatically installed.
+
+NOTE: The pipelines module will still attempt to install any package dependencies found at in your
+file headers at start time, but they will not be downloaded again.
+
+```sh
+# build in the specific pipelines
+PIPELINE_DIR="pipelines-custom"
+# assuming the above directory is in your source repo and not skipped by `.dockerignore`, it will get copied to the image
+PIPELINE_PREFIX="file:///app"
+
+# retrieve all the sub files
+export PIPELINES_URLS=
+for file in "$PIPELINE_DIR"/*; do
+    if [[ -f "$file" ]]; then
+        if [[ "$file" == *.py ]]; then
+            if [ -z "$PIPELINES_URLS" ]; then
+                PIPELINES_URLS="$PIPELINE_PREFIX/$file"
+            else
+                PIPELINES_URLS="$PIPELINES_URLS;$PIPELINE_PREFIX/$file"
+            fi
+        fi
+    fi
+done
+echo "New Custom Install Pipes: $PIPELINES_URLS"
+
+docker build --build-arg PIPELINES_URLS=$PIPELINES_URLS --build-arg MINIMUM_BUILD=true -f Dockerfile .
+```
 
 ## 📂 Directory Structure and Examples
 
