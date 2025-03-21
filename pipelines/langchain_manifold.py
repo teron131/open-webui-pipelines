@@ -1,20 +1,14 @@
 import os
 from typing import Generator, Iterator, List, Union
 
-from langchain.schema import AIMessage, HumanMessage
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_playground.UniversalChain import UniversalChain
+from langchain_playground.universal import UniversalChain
 from pydantic import BaseModel
 
 
 class Pipeline:
     class Valves(BaseModel):
         OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-        AZURE_OPENAI_API_KEY: str = os.getenv("AZURE_OPENAI_API_KEY", "")
-        AZURE_OPENAI_ENDPOINT: str = os.getenv("AZURE_OPENAI_ENDPOINT", "")
-        AZURE_OPENAI_DEPLOYMENT_NAME: str = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "")
-        AZURE_OPENAI_API_VERSION: str = os.getenv("AZURE_OPENAI_API_VERSION", "")
-        GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+        GOOGLE_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
         OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
         LANGCHAIN_TRACING_V2: bool = os.getenv("LANGCHAIN_TRACING_V2", "false").lower() == "true"
         LANGCHAIN_API_KEY: str = os.getenv("LANGCHAIN_API_KEY", "")
@@ -38,17 +32,13 @@ class Pipeline:
 
     def get_models(self):
         return [
-            {"id": "gpt-4o-mini", "name": "GPT-4o-mini"},
-            {"id": "gpt-4o-2024-11-20", "name": "GPT-4o"},
-            {"id": "o1-mini", "name": "o1 mini"},
-            {"id": "o1", "name": "o1"},
-            {"id": "o3-mini", "name": "o3 mini"},
-            {"id": "gemini-2.0-flash-exp", "name": "Gemini 2.0 Flash"},
-            {"id": "gemini-2.0-flash-thinking-exp", "name": "Gemini 2.0 Flash Thinking"},
-            {"id": "gemini-exp-1206", "name": "Gemini Experimental"},
-            {"id": "claude-3.5-sonnet", "name": "Claude 3.5 Sonnet"},
-            {"id": "deepseek-chat", "name": "DeepSeek V3"},
-            {"id": "deepseek-deepseek-r1", "name": "DeepSeek R1"},
+            {"id": "openai/gpt-4o-mini", "name": "GPT-4o-mini"},
+            {"id": "openai/o3-mini", "name": "o3 mini"},
+            {"id": "google/gemini-2.0-flash-001", "name": "Gemini 2.0 Flash"},
+            {"id": "google/gemini-2.0-flash-thinking-exp:free", "name": "Gemini 2.0 Flash Thinking"},
+            {"id": "google/gemini-2.0-pro-exp-02-05:free", "name": "Gemini 2.0 Pro"},
+            {"id": "anthropic/claude-3.7-sonnet", "name": "Claude 3.7 Sonnet"},
+            {"id": "anthropic/claude-3.7-sonnet:thinking", "name": "Claude 3.7 Sonnet Thinking"},
         ]
 
     def pipe(self, user_message: str, model_id: str, messages: List[dict], body: dict) -> Union[str, Generator, Iterator]:
